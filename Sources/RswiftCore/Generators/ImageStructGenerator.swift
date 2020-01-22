@@ -133,7 +133,32 @@ private extension NamespacedAssetSubfolder {
           value: "Rswift.ImageResource(bundle: R.hostingBundle, name: \"\(imagePath)\(name)\")"
         )
     }
-
+    
+    var resourceArrayString = groupedFunctions.uniques.reduce(into: "[") { (arr, name) in
+        arr.append("Rswift.ImageResource(bundle: R.hostingBundle, name: \"\(imagePath)\(name)\"),")
+    }
+    resourceArrayString += "]"
+    
+    let allImagesFunction = Function(availables: [],
+                                     comments: ["`Asset SubFolder(named: \"\(name)\", bundle: ..., traitCollection: ...)`"],
+                                     accessModifier: AccessLevel.publicLevel,
+                                     isStatic: true,
+                                     name: SwiftIdentifier(name: name),
+                                     generics: nil,
+                                     parameters: [
+                                        Function.Parameter(
+                                            name: "compatibleWith",
+                                            localName: "traitCollection",
+                                            type: Type._UITraitCollection.asOptional(),
+                                            defaultValue: "nil"
+                                        )
+                                     ],
+                                     doesThrow: false,
+                                     returnType: Type._Array.withGenericArgs([Type._UIImage]),
+                                     body: "\(resourceArrayString).compactMap { UIKit.UIImage(resource: $0, compatibleWith: traitCollection) }",
+                                     os: ["iOS", "tvOS"])
+    var functions = groupedFunctions.uniques.map { imageFunction(for: $0, at: externalAccessLevel, prefix: qualifiedName)}
+    functions.append(allImagesFunction)
     return Struct(
       availables: [],
       comments: ["This `\(qualifiedName)` struct is generated, and contains static references to \(imageLets.count) images."],
@@ -142,7 +167,7 @@ private extension NamespacedAssetSubfolder {
       implements: [],
       typealiasses: [],
       properties: imageLets,
-      functions: groupedFunctions.uniques.map { imageFunction(for: $0, at: externalAccessLevel, prefix: qualifiedName) },
+      functions:  functions,
       structs: structs,
       classes: [],
       os: []
