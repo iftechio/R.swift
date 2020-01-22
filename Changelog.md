@@ -1,3 +1,7 @@
+## 5.2.0
+
+
+
 ## 5.1.0
 
 - WatchOS support (by @lammertw)
